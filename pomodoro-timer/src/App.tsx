@@ -8,6 +8,8 @@ export function App() {
 
   return (
     <ThemeProvider theme={defaultTheme}>
+      <p>Hello World</p>
+
       <Button variant="primary">Enviar</Button>
       <Button variant="secondary">Enviar</Button>
       <Button variant="danger">Enviar</Button>
