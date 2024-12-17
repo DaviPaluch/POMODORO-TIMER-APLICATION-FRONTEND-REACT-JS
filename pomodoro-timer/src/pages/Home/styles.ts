@@ -61,10 +61,16 @@ const BaseInput = styled.input`
     box-shadow: none;
     border-color: ${props => props.theme['blue-500']};
   }
+
+
 `;
 
 export const TaskInput = styled(BaseInput)`
   flex: 1;
+
+  &::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
 `;
 
 export const MinutesAmountInput = styled(BaseInput)`
