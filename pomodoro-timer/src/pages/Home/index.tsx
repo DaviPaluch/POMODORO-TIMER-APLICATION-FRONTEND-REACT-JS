@@ -9,14 +9,19 @@ const formValidationSchema = zod.object({
   minutesAmount: zod.number().min(5, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
 });
 
+interface ICreateNewCicle {
+  task: string;
+  minutesAmount: number;
+}
+
 export function Home() {
   const { register, handleSubmit, watch } = useForm({
     resolver: zodResolver(formValidationSchema),
   });
   // ao registrar o input, é possivel trabalhar com métodos como por exemplo 'onChange' e 'onBlur' e etc.
 
-  function handleCreateNewCicle(data: any) {
-    console.log(data);
+  function handleCreateNewCicle(data: ICreateNewCicle) {
+
   }
 
   const task = watch('task');
@@ -47,7 +52,7 @@ export function Home() {
             placeholder="00"
             step={5}
             min={5}
-            // max={60}
+            max={60}
             {...register('minutesAmount', { valueAsNumber: true })}
           />
           <span>minutos.</span>
