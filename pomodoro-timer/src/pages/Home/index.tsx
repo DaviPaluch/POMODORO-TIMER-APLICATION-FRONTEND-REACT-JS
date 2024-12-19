@@ -3,19 +3,30 @@ import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, S
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
+import { useState } from "react";
 
 const formValidationSchema = zod.object({
   task: zod.string().min(1, "Deve ser preenchido."),
   minutesAmount: zod.number().min(5, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
 });
 
-interface ICreateNewCicle {
+interface ICreateNewCicleForm {
+  task: string;
+  minutesAmount: number;
+}
+
+interface Cycle {
+  id: string;
   task: string;
   minutesAmount: number;
 }
 
 export function Home() {
-  const { register, handleSubmit, watch, reset } = useForm<ICreateNewCicle>({
+
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+
+  const { register, handleSubmit, watch, reset } = useForm<ICreateNewCicleForm>({
     resolver: zodResolver(formValidationSchema),
     defaultValues: {
       task: '',
@@ -24,13 +35,27 @@ export function Home() {
   });
   // ao registrar o input, é possivel trabalhar com métodos como por exemplo 'onChange' e 'onBlur' e etc.
 
-  function handleCreateNewCicle(data: ICreateNewCicle) {
-    console.log(data);
+  function handleCreateNewCicle(data: ICreateNewCicleForm) {
+    const newCycle: Cycle = {
+      id: new Date().toISOString(),
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+    }
+
+    setCycles((state) => [...state, newCycle]);
+    // sempre que alterar um estado que depende do seu valor anterior, 
+    // é importante que esse estado seja atribuido com uma função. Pesquise sobre clousures.
+
+    setActiveCycleId(newCycle.id);
+
     reset()
   }
 
   const task = watch('task');
   const isSubmitDisabled = !task;
+
+  const activeCycle = cycles.find(cycle => cycle.id === activeCycleId);
+  console.log(activeCycle);
 
   return (
     <HomeContainer>
