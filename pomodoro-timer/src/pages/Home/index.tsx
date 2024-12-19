@@ -15,13 +15,18 @@ interface ICreateNewCicle {
 }
 
 export function Home() {
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, reset } = useForm<ICreateNewCicle>({
     resolver: zodResolver(formValidationSchema),
+    defaultValues: {
+      task: '',
+      minutesAmount: 0,
+    }
   });
   // ao registrar o input, é possivel trabalhar com métodos como por exemplo 'onChange' e 'onBlur' e etc.
 
   function handleCreateNewCicle(data: ICreateNewCicle) {
-
+    console.log(data);
+    reset()
   }
 
   const task = watch('task');
