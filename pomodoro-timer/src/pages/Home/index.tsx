@@ -5,11 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
 import { useEffect, useState } from "react";
 import { differenceInSeconds } from "date-fns";
-import { cy } from "date-fns/locale";
 
 const formValidationSchema = zod.object({
   task: zod.string().min(1, "Deve ser preenchido."),
-  minutesAmount: zod.number().min(5, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
+  minutesAmount: zod.number().min(1, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
 });
 
 interface ICreateNewCicleForm {
@@ -23,6 +22,7 @@ interface Cycle {
   minutesAmount: number;
   startDate: Date;
   interruptedDate?: Date;
+  finishedDate?: Date;
 }
 
 export function Home() {
@@ -31,7 +31,7 @@ export function Home() {
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
   const [amountSecondsPassed, setAmountSecondsPassed] = useState<number>(0);
 
-  const { register, handleSubmit, watch, reset } = useForm<ICreateNewCicleForm>({
+  const { register, handleSubmit, reset } = useForm<ICreateNewCicleForm>({
     resolver: zodResolver(formValidationSchema),
     defaultValues: {
       task: '',
@@ -40,26 +40,41 @@ export function Home() {
   });
   // ao registrar o input, é possivel trabalhar com métodos como por exemplo 'onChange' e 'onBlur' e etc.
 
-  console.log("activeCycleId", activeCycleId);
   const activeCycle = cycles.find(cycle => cycle.id === activeCycleId);
-  console.log(activeCycle);
+
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
+
 
   useEffect(() => {
     let interval: number;
 
     if (activeCycle) {
       interval = setInterval(() => {
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate)
-        );
+        const secondsDifference = differenceInSeconds(new Date(), activeCycle.startDate);
+
+        if (secondsDifference >= totalSeconds) {
+          setCycles((state) => state.map((cycle) => {
+            if (cycle.id === activeCycleId) {
+              return {
+                ...cycle,
+                finishedDate: new Date(),
+              }
+            }
+            return cycle;
+          }));
+
+          setAmountSecondsPassed(totalSeconds);
+          clearInterval(interval);
+        } else {
+          setAmountSecondsPassed(secondsDifference);
+        }
       }, 1000);
     }
 
     return () => {
       clearInterval(interval)
-      setAmountSecondsPassed(0);
     };
-  }, [activeCycle]);
+  }, [activeCycle, activeCycleId, totalSeconds]);
 
   function handleCreateNewCicle(data: ICreateNewCicleForm) {
     const newCycle: Cycle = {
@@ -79,7 +94,7 @@ export function Home() {
   }
 
   function handleInterruptCycle() {
-    setCycles(cycles.map((cycle) => {
+    setCycles((state) => state.map((cycle) => {
       if (cycle.id === activeCycleId) {
         return {
           ...cycle,
@@ -92,7 +107,6 @@ export function Home() {
     setActiveCycleId(null);
   }
 
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0;
 
   const minutesAmount = Math.floor(currentSeconds / 60);
@@ -132,7 +146,7 @@ export function Home() {
             id="minutesAmount"
             placeholder="00"
             step={5}
-            min={5}
+            min={1}
             max={60}
             disabled={!!activeCycle}
             {...register('minutesAmount', { valueAsNumber: true })}
