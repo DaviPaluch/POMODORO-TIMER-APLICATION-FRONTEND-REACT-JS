@@ -1,31 +1,39 @@
-import { Play } from "phosphor-react";
-import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, Separator, StartCountDownButton, TaskInput } from "./styles";
-import { useForm } from "react-hook-form";
+import { HandPalm, Play } from "phosphor-react";
+import { HomeContainer, StartCountDownButton, StopCountDownButton } from "./styles";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
+import { CountDown } from "./components/CountDown";
+import { NewCycleForm } from "./components/NewCycleForm";
+import { useContext } from "react";
+import { CycleContext } from "../../contexts/CycleContext";
 
-const formValidationSchema = zod.object({
-  task: zod.string().min(1, "Deve ser preenchido."),
-  minutesAmount: zod.number().min(5, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
-});
-
-interface ICreateNewCicle {
+interface ICreateNewCicleForm {
   task: string;
   minutesAmount: number;
 }
 
+const formValidationSchema = zod.object({
+  task: zod.string().min(1, "Deve ser preenchido."),
+  minutesAmount: zod.number().min(1, "O Valor mínimo é 5 minutos").max(60, "O valor maximo é 60 minutos."),
+});
+
 export function Home() {
-  const { register, handleSubmit, watch, reset } = useForm<ICreateNewCicle>({
+
+  const {createNewCicle, interruptCycle, activeCycle} = useContext(CycleContext)
+
+  const newCycleForm = useForm<ICreateNewCicleForm>({
     resolver: zodResolver(formValidationSchema),
     defaultValues: {
       task: '',
       minutesAmount: 0,
     }
   });
-  // ao registrar o input, é possivel trabalhar com métodos como por exemplo 'onChange' e 'onBlur' e etc.
 
-  function handleCreateNewCicle(data: ICreateNewCicle) {
-    console.log(data);
+  const { watch, handleSubmit, reset } = newCycleForm;  
+
+  function handleCreateNewCycle(data:ICreateNewCicleForm) {
+    createNewCicle(data)
     reset()
   }
 
@@ -34,50 +42,30 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <form action="" onSubmit={handleSubmit(handleCreateNewCicle)}>
-        <FormContainer>
-          <label htmlFor="task">Vou trabalhar em</label>
-          <TaskInput
-            type="text"
-            id="task"
-            list="task-suggestions"
-            placeholder="Nome da tarefa"
-            {...register('task')}
-          />
-          <datalist id="task-suggestions">
-            <option value="Escrever código" />
-            <option value="Ler a literatura" />
-            <option value="Fazer exercícios" />
-            <option value="Fazer outros" />
-          </datalist>
-          <label htmlFor="minutesAmount">durante</label>
-          <MinutesAmountInput
-            type="number"
-            id="minutesAmount"
-            placeholder="00"
-            step={5}
-            min={5}
-            max={60}
-            {...register('minutesAmount', { valueAsNumber: true })}
-          />
-          <span>minutos.</span>
-        </FormContainer>
+      <form action="" onSubmit={handleSubmit(handleCreateNewCycle)}>
+          <FormProvider {...newCycleForm}>
+            <NewCycleForm />
+          </FormProvider>
+          <CountDown />
 
-        <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
-          <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
-        </CountdownContainer>
-
-        <StartCountDownButton
-          type="submit"
-          disabled={isSubmitDisabled}
-        >
-          <Play size={24} />
-          Iniciar
-        </StartCountDownButton>
+        {activeCycle ? (
+          <StopCountDownButton
+            type="submit"
+            onClick={interruptCycle}
+          >
+            <HandPalm size={24} />
+            Intenrromper
+          </StopCountDownButton>
+        ) : (
+          <StartCountDownButton
+            type="submit"
+            disabled={isSubmitDisabled}
+          >
+            <Play size={24} />
+            Iniciar
+          </StartCountDownButton>
+        )
+        }
       </form>
     </HomeContainer >
   )
